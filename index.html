@@ -6,52 +6,254 @@
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
   <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://propublica.github.io/weepeople/weepeople.css">  
   <style>
     body { margin: 0; padding: 0; }
     #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    #title {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px 16px;
+  border-radius: 6px;
+
+  font-family: sans-serif;
+  font-size: 18px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+
+  pointer-events: none; /* so it doesn't block map interaction */
+}  
+   #legend {
+  position: absolute;
+  bottom: 60px;
+  right: 10px;
+  z-index: 9999;
+
+  background: rgba(255, 255, 255, 0.95);
+  padding: 10px 12px;
+  border-radius: 6px;
+
+  font-family: sans-serif;
+  font-size: 13px;
+}
+
+.legend-title {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-icon {
+  font-size: 18px;
+  line-height: 1;
+}   
   </style>
 </head>
 <body>
+<div id="title">2026 Gorton and Denton by-election</div>
 <div id="map"></div>
+<div id="legend">
+  <div class="legend-title">Key</div>
+  <div class="legend-item">
+    <span class="legend-icon weepeople">A</span>
+    <span>= 1% of total vote</span>
+  </div>
+</div>    
 
 <script>
   const map = new maplibregl.Map({
-    container: 'map',
-    style: {
-      version: 8,
-      sources: {},
-      layers: []
-    },
-    center: [0, 0],
-    zoom: 2,
-    maxZoom: 8,
-    minZoom: 0
+  container: 'map',
+  style: { version: 8, sources: {}, layers: [] },
+  center: [0, 0],
+  zoom: 2,
+  hash: true,
+  maxZoom: 8,
+  minZoom: 0,
+  attributionControl: false   // 👈 disable default so we control it
+});
+
+map.addControl(new maplibregl.AttributionControl({
+  compact: false,
+  customAttribution: [
+    '<a href="https://maplibre.org/" target="_blank" rel="noopener">MapLibre</a>',
+    '<a href="https://github.com/propublica/weepeople" target="_blank" rel="noopener">Wee People (ProPublica)</a>',
+    '<a href="https://azgaar.github.io/Fantasy-Map-Generator/" target="_blank" rel="noopener">Azgaar Fantasy Map Generator</a>'
+  ]
+}));
+
+map.on('load', () => {
+  const coords = [
+    [-20.0587, 10],  // top-left
+    [20.0587, 10],   // top-right
+    [20.0587, -10],  // bottom-right
+    [-20.0587, -10]  // bottom-left
+  ];
+
+  map.addSource('island-image', {
+    type: 'image',
+    url: 'https://mapsmania.github.io/byelection/isle.png',
+    coordinates: coords
   });
 
-  map.on('load', () => {
-
-    map.addSource('island-image', {
-      type: 'image',
-      url: 'https://mapsmania.github.io/byelection/island.png',
-      coordinates: [
-        [-10, 10],  // top-left
-        [10, 10],   // top-right
-        [10, -10],  // bottom-right
-        [-10, -10]  // bottom-left
-      ]
-    });
-
-    map.addLayer({
-      id: 'island-layer',
-      type: 'raster',
-      source: 'island-image'
-    });
-
-    map.fitBounds([
-      [-10, -10],
-      [10, 10]
-    ]);
+  map.addLayer({
+    id: 'island-layer',
+    type: 'raster',
+    source: 'island-image'
   });
+
+  // Updated to match your image aspect ratio bounds
+  map.fitBounds([[-20.0587, -10], [20.0587, 10]]);
+});
+
+// HELPER: Click anywhere on the image to get coordinates in the console
+map.on('click', (e) => {
+  const { lng, lat } = e.lngLat;
+  console.log(`Marker Coordinate: [${lng.toFixed(4)}, ${lat.toFixed(4)}]`);
+});
+
+
+    // WEE PEOPLE MARKERs
+const weeDiv = document.createElement('div');
+
+weeDiv.innerHTML = '<h1 class="weepeople">A</h1>';
+
+// Optional styling tweaks
+Object.assign(weeDiv.style, {
+  fontSize: '24px',     // control icon size
+  lineHeight: '1',
+  cursor: 'pointer'
+});
+
+// First marker
+const weeDiv1 = document.createElement('div');
+weeDiv1.innerHTML = '<h1 class="weepeople">A</h1>';
+
+new maplibregl.Marker({ element: weeDiv1 })
+  .setLngLat([3.69, -2.059])
+  .addTo(map);
+
+// Second marker
+const weeDiv2 = document.createElement('div');
+weeDiv2.innerHTML = '<h1 class="weepeople">A</h1>';
+
+new maplibregl.Marker({ element: weeDiv2 })
+  .setLngLat([5.213, -2.282])
+  .addTo(map);
+
+function getRandomWeeLetter() {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  return letters[Math.floor(Math.random() * letters.length)];
+}
+
+function addWeePerson(lng, lat) {
+  const div = document.createElement('div');
+
+  const letter = getRandomWeeLetter();
+  div.innerHTML = `<h1 class="weepeople">${letter}</h1>`;
+
+  new maplibregl.Marker({
+    element: div,
+    anchor: 'center'
+  })
+    .setLngLat([lng, lat])
+    .addTo(map);
+}
+
+// Labour Bounding box
+const west = -8.203;
+const east = -3.255;
+const north = 3.33;
+const south = 0.12;
+
+// Generate 25 random markers
+for (let i = 0; i < 25; i++) {
+  const lng = west + Math.random() * (east - west);
+  const lat = south + Math.random() * (north - south);
+
+  addWeePerson(lng, lat);
+}   
+
+// Green bounding box
+const west2 = -14.89;
+const east2 = -11.171;
+const north2 = 0.805;
+const south2 = -4.12;
+
+// Generate 40 random markers
+for (let i = 0; i < 40; i++) {
+  const lng = west2 + Math.random() * (east2 - west2);
+  const lat = south2 + Math.random() * (north2 - south2);
+
+  addWeePerson(lng, lat);
+}
+
+// Reform bounding box
+const west4 = -9.249;
+const east4 = -1.259;
+const north4 = -0.611;
+const south4 = -4.768;
+
+// Generate 29 random markers
+for (let i = 0; i < 29; i++) {
+  const lng = west4 + Math.random() * (east4 - west4);
+  const lat = south4 + Math.random() * (north4 - south4);
+
+  addWeePerson(lng, lat);
+}
+
+
+// Liberal bounding box
+const west5 = 5.563;
+const east5 = 9.356;
+const north5 = 4.124;
+const south5 = 1.646;
+
+// Generate 2 random markers
+for (let i = 0; i < 2; i++) {
+  const lng = west5 + Math.random() * (east5 - west5);
+  const lat = south5 + Math.random() * (north5 - south5);
+
+  addWeePerson(lng, lat);
+}
+    
+//labels
+function addLabel(text, lng, lat, color) {
+  const div = document.createElement('div');
+  div.innerText = text;
+
+  Object.assign(div.style, {
+    color: color,
+    fontWeight: 'bold',
+    fontSize: '14px',
+    fontFamily: 'sans-serif',
+    textTransform: 'uppercase',
+    letterSpacing: '1px',
+    textShadow: '0 0 3px white, 0 0 3px white'
+  });
+
+  new maplibregl.Marker({
+    element: div,
+    anchor: 'center',
+    zIndex: 1000   // 👈 THIS is the key
+  })
+    .setLngLat([lng, lat])
+    .addTo(map);
+}    
+
+// Existing 
+addLabel('Labour', -5.647, 1.852, '#d50000'); addLabel('Green', -12.788, -1.862, '#008000'); addLabel('Reform', -6.077,-3.273, '#0033A0'); addLabel('Conservative', 4.315, -0.95, '#0087DC'); addLabel('Liberal', 7.428, 2.938, '#B8860B');   
+                                                        
 </script>
 
 </body>
